@@ -70,13 +70,67 @@ function analyzeSituation(situation: string): any {
     procedures: extractProcedures(situation)
   };
   
-  // Extract specialties mentioned
-  const specialtyKeywords = ['cardiology', 'cardiac', 'icu', 'critical care', 'emergency', 'trauma'];
-  for (const specialty of specialtyKeywords) {
-    if (situation.toLowerCase().includes(specialty)) {
-      analysis.specialties.push(specialty);
+  // Enhanced specialty extraction with procedure-specific mapping
+  const procedureSpecialtyMap: {[key: string]: string[]} = {
+    'vasectomy': ['Urology'],
+    'circumcision': ['Urology'],
+    'prostate': ['Urology'],
+    'kidney': ['Urology', 'Nephrology'],
+    'bladder': ['Urology'],
+    'cardiac': ['Cardiology'],
+    'heart': ['Cardiology'],
+    'angioplasty': ['Cardiology'],
+    'catheterization': ['Cardiology'],
+    'appendectomy': ['General Surgery'],
+    'cholecystectomy': ['General Surgery'],
+    'hernia': ['General Surgery'],
+    'colonoscopy': ['Gastroenterology'],
+    'endoscopy': ['Gastroenterology'],
+    'bronchoscopy': ['Pulmonology'],
+    'arthroscopy': ['Orthopedics'],
+    'fracture': ['Orthopedics'],
+    'joint': ['Orthopedics'],
+    'cataract': ['Ophthalmology'],
+    'retinal': ['Ophthalmology'],
+    'tonsillectomy': ['ENT'],
+    'rhinoplasty': ['ENT', 'Plastic Surgery'],
+    'mammogram': ['Radiology'],
+    'mri': ['Radiology'],
+    'ct scan': ['Radiology'],
+    'ultrasound': ['Radiology'],
+    'biopsy': ['Pathology'],
+    'chemotherapy': ['Oncology'],
+    'radiation': ['Radiation Oncology'],
+    'dialysis': ['Nephrology'],
+    'delivery': ['Obstetrics'],
+    'cesarean': ['Obstetrics'],
+    'gynecological': ['Gynecology'],
+    'psychiatric': ['Psychiatry'],
+    'neurosurgery': ['Neurosurgery'],
+    'spine': ['Neurosurgery', 'Orthopedics'],
+    'brain': ['Neurosurgery', 'Neurology'],
+    'dermatology': ['Dermatology'],
+    'plastic': ['Plastic Surgery'],
+    'cosmetic': ['Plastic Surgery'],
+    'emergency': ['Emergency Medicine'],
+    'trauma': ['Emergency Medicine', 'Trauma Surgery'],
+    'icu': ['Critical Care'],
+    'intensive care': ['Critical Care'],
+    'anesthesia': ['Anesthesiology'],
+    'pediatric': ['Pediatrics'],
+    'geriatric': ['Geriatrics']
+  };
+  
+  // Check for procedure-specific specialties
+  const situationLower = situation.toLowerCase();
+  for (const [procedure, specialties] of Object.entries(procedureSpecialtyMap)) {
+    if (situationLower.includes(procedure)) {
+      analysis.specialties.push(...specialties);
     }
   }
+  
+  // Remove duplicates
+  analysis.specialties = [...new Set(analysis.specialties)];
   
   return analysis;
 }
@@ -190,7 +244,24 @@ function findSuitableDoctor(unit: string, doctors: Person[], situation: string):
     'ICU': ['Critical Care', 'Emergency Medicine'],
     'Cardiology': ['Cardiology'],
     'Emergency': ['Emergency Medicine'],
-    'Surgery': ['Surgery']
+    'Surgery': ['General Surgery', 'Urology', 'Orthopedics', 'Neurosurgery', 'Plastic Surgery', 'ENT', 'Trauma Surgery'],
+    'Urology': ['Urology'],
+    'Orthopedics': ['Orthopedics'],
+    'Neurosurgery': ['Neurosurgery'],
+    'Oncology': ['Oncology'],
+    'Gastroenterology': ['Gastroenterology'],
+    'Pulmonology': ['Pulmonology'],
+    'Nephrology': ['Nephrology'],
+    'Obstetrics': ['Obstetrics'],
+    'Gynecology': ['Gynecology'],
+    'Pediatrics': ['Pediatrics'],
+    'Psychiatry': ['Psychiatry'],
+    'Dermatology': ['Dermatology'],
+    'Ophthalmology': ['Ophthalmology'],
+    'ENT': ['ENT'],
+    'Radiology': ['Radiology'],
+    'Pathology': ['Pathology'],
+    'Anesthesiology': ['Anesthesiology']
   };
   
   const preferredSpecialties = unitSpecialtyMap[unit] || [];
@@ -342,6 +413,11 @@ async function generateShiftsForTeam(
   const shifts: Shift[] = [];
   const doctors = availableStaff.filter(p => p.role === 'Doctor');
   const nurses = availableStaff.filter(p => p.role === 'Nurse');
+  const technicians = availableStaff.filter(p => p.role === 'Technician');
+  const therapists = availableStaff.filter(p => p.role === 'Therapist');
+  const pharmacists = availableStaff.filter(p => p.role === 'Pharmacist');
+  const itSupport = availableStaff.filter(p => p.role === 'IT Support');
+  const admin = availableStaff.filter(p => p.role === 'Admin');
   
   const units = extractUnits(situation);
   const timeSlots = extractTimeSlots(situation, date);
@@ -356,6 +432,11 @@ async function generateShiftsForTeam(
         timeSlot,
         doctors,
         nurses,
+        technicians,
+        therapists,
+        pharmacists,
+        itSupport,
+        admin,
         situation,
         constraints,
         strategy
@@ -382,6 +463,11 @@ function selectStaffForShiftWithStrategy(
   timeSlot: any,
   doctors: Person[],
   nurses: Person[],
+  technicians: Person[],
+  therapists: Person[],
+  pharmacists: Person[],
+  itSupport: Person[],
+  admin: Person[],
   situation: string,
   constraints: any,
   strategy: 'specialty' | 'balanced' | 'senior'
@@ -390,44 +476,65 @@ function selectStaffForShiftWithStrategy(
   
   let selectedDoctor: Person | null = null;
   let selectedNurse: Person | null = null;
+  let selectedTechnician: Person | null = null;
+  let selectedTherapist: Person | null = null;
+  let selectedPharmacist: Person | null = null;
+  let selectedIT: Person | null = null;
+  let selectedAdmin: Person | null = null;
   
   switch (strategy) {
     case 'specialty':
       selectedDoctor = findSpecialtyDoctor(unit, doctors, situation);
       selectedNurse = findSpecialtyNurse(unit, nurses, situation);
+      selectedTechnician = findSpecialtyTechnician(unit, technicians, situation);
+      selectedTherapist = findSpecialtyTherapist(unit, therapists, situation);
+      selectedPharmacist = findSpecialtyPharmacist(unit, pharmacists, situation);
+      selectedIT = findSpecialtyIT(unit, itSupport, situation);
+      selectedAdmin = findSpecialtyAdmin(unit, admin, situation);
       break;
     case 'balanced':
       selectedDoctor = findBalancedDoctor(unit, doctors, situation);
       selectedNurse = findBalancedNurse(unit, nurses, situation);
+      selectedTechnician = findBalancedTechnician(unit, technicians, situation);
+      selectedTherapist = findBalancedTherapist(unit, therapists, situation);
+      selectedPharmacist = findBalancedPharmacist(unit, pharmacists, situation);
+      selectedIT = findBalancedIT(unit, itSupport, situation);
+      selectedAdmin = findBalancedAdmin(unit, admin, situation);
       break;
     case 'senior':
       selectedDoctor = findSeniorDoctor(unit, doctors, situation);
       selectedNurse = findSeniorNurse(unit, nurses, situation);
+      selectedTechnician = findSeniorTechnician(unit, technicians, situation);
+      selectedTherapist = findSeniorTherapist(unit, therapists, situation);
+      selectedPharmacist = findSeniorPharmacist(unit, pharmacists, situation);
+      selectedIT = findSeniorIT(unit, itSupport, situation);
+      selectedAdmin = findSeniorAdmin(unit, admin, situation);
       break;
   }
   
-  if (selectedDoctor) {
-    assignments.push({
-      personId: selectedDoctor.personId,
-      role: selectedDoctor.role,
-      tags: {
-        senior: selectedDoctor.seniority?.includes('Senior') || selectedDoctor.seniority?.includes('Consultant'),
-        specialty: selectedDoctor.specialty,
-        experience: selectedDoctor.experience?.yearsOfExperience || 0,
-        matchScore: calculatePersonMatchScore(selectedDoctor, unit, situation)
-      }
-    });
-  }
+  // Add assignments for all selected staff
+  const staffToAdd = [
+    selectedDoctor,
+    selectedNurse,
+    selectedTechnician,
+    selectedTherapist,
+    selectedPharmacist,
+    selectedIT,
+    selectedAdmin
+  ].filter(Boolean) as Person[];
   
-  if (selectedNurse) {
+  for (const person of staffToAdd) {
     assignments.push({
-      personId: selectedNurse.personId,
-      role: selectedNurse.role,
+      personId: person.personId,
+      role: person.role,
       tags: {
-        grade: selectedNurse.grade,
-        unit: selectedNurse.unit,
-        experience: selectedNurse.experience?.yearsOfExperience || 0,
-        matchScore: calculatePersonMatchScore(selectedNurse, unit, situation)
+        senior: person.seniority?.includes('Senior') || person.seniority?.includes('Consultant'),
+        specialty: person.specialty,
+        grade: person.grade,
+        unit: person.unit,
+        department: person.department,
+        experience: person.experience?.yearsOfExperience || 0,
+        matchScore: calculatePersonMatchScore(person, unit, situation)
       }
     });
   }
@@ -437,21 +544,55 @@ function selectStaffForShiftWithStrategy(
 
 // Strategy-specific staff selection functions
 function findSpecialtyDoctor(unit: string, doctors: Person[], situation: string): Person | null {
+  const availableDoctors = doctors.filter(d => 
+    !d.availability || 
+    d.availability.status === 'available' || 
+    d.availability.status === undefined
+  );
+  
+  // Extract specialties from situation analysis
+  const situationAnalysis = analyzeSituation(situation);
+  const requiredSpecialties = situationAnalysis.specialties;
+  
+  // First, try to match doctors with required specialties from situation
+  for (const specialty of requiredSpecialties) {
+    const doctor = availableDoctors.find(d => d.specialty === specialty);
+    if (doctor) return doctor;
+  }
+  
+  // Fallback to unit-based specialty mapping
   const unitSpecialtyMap: {[key: string]: string[]} = {
     'ICU': ['Critical Care', 'Emergency Medicine'],
     'Cardiology': ['Cardiology'],
     'Emergency': ['Emergency Medicine'],
-    'Surgery': ['Surgery']
+    'Surgery': ['General Surgery', 'Urology', 'Orthopedics', 'Neurosurgery', 'Plastic Surgery', 'ENT', 'Trauma Surgery'],
+    'Urology': ['Urology'],
+    'Orthopedics': ['Orthopedics'],
+    'Neurosurgery': ['Neurosurgery'],
+    'Oncology': ['Oncology'],
+    'Gastroenterology': ['Gastroenterology'],
+    'Pulmonology': ['Pulmonology'],
+    'Nephrology': ['Nephrology'],
+    'Obstetrics': ['Obstetrics'],
+    'Gynecology': ['Gynecology'],
+    'Pediatrics': ['Pediatrics'],
+    'Psychiatry': ['Psychiatry'],
+    'Dermatology': ['Dermatology'],
+    'Ophthalmology': ['Ophthalmology'],
+    'ENT': ['ENT'],
+    'Radiology': ['Radiology'],
+    'Pathology': ['Pathology'],
+    'Anesthesiology': ['Anesthesiology']
   };
   
   const preferredSpecialties = unitSpecialtyMap[unit] || [];
   
   for (const specialty of preferredSpecialties) {
-    const doctor = doctors.find(d => d.specialty === specialty);
+    const doctor = availableDoctors.find(d => d.specialty === specialty);
     if (doctor) return doctor;
   }
   
-  return doctors[0] || null;
+  return availableDoctors[0] || null;
 }
 
 function findBalancedDoctor(unit: string, doctors: Person[], situation: string): Person | null {
@@ -512,6 +653,155 @@ function findSeniorNurse(unit: string, nurses: Person[], situation: string): Per
   return seniorNurses[0] || nurses[0] || null;
 }
 
+// Technician selection functions
+function findSpecialtyTechnician(unit: string, technicians: Person[], situation: string): Person | null {
+  const unitDepartmentMap: {[key: string]: string[]} = {
+    'ICU': ['Respiratory Therapy', 'Laboratory'],
+    'Cardiology': ['Cardiac Catheterization', 'Radiology'],
+    'Emergency': ['Laboratory', 'Radiology'],
+    'Surgery': ['Respiratory Therapy', 'Laboratory'],
+    'Radiology': ['Radiology']
+  };
+  
+  const preferredDepartments = unitDepartmentMap[unit] || [];
+  
+  for (const department of preferredDepartments) {
+    const technician = technicians.find(t => t.department === department);
+    if (technician) return technician;
+  }
+  
+  return technicians[0] || null;
+}
+
+function findBalancedTechnician(unit: string, technicians: Person[], situation: string): Person | null {
+  const midLevelTechnician = technicians.find(t => 
+    t.experience?.yearsOfExperience && 
+    t.experience.yearsOfExperience >= 3 && 
+    t.experience.yearsOfExperience <= 10
+  );
+  
+  return midLevelTechnician || technicians[0] || null;
+}
+
+function findSeniorTechnician(unit: string, technicians: Person[], situation: string): Person | null {
+  const seniorTechnicians = technicians.filter(t => 
+    t.grade?.includes('Senior') ||
+    (t.experience?.yearsOfExperience && t.experience.yearsOfExperience >= 8)
+  );
+  
+  return seniorTechnicians[0] || technicians[0] || null;
+}
+
+// Therapist selection functions
+function findSpecialtyTherapist(unit: string, therapists: Person[], situation: string): Person | null {
+  const unitDepartmentMap: {[key: string]: string[]} = {
+    'Orthopedic': ['Physical Therapy', 'Occupational Therapy'],
+    'Neurosurgery': ['Physical Therapy', 'Occupational Therapy', 'Speech Therapy'],
+    'Psychiatry': ['Psychiatry'],
+    'Rheumatology': ['Physical Therapy']
+  };
+  
+  const preferredDepartments = unitDepartmentMap[unit] || [];
+  
+  for (const department of preferredDepartments) {
+    const therapist = therapists.find(t => t.department === department);
+    if (therapist) return therapist;
+  }
+  
+  return therapists[0] || null;
+}
+
+function findBalancedTherapist(unit: string, therapists: Person[], situation: string): Person | null {
+  const midLevelTherapist = therapists.find(t => 
+    t.experience?.yearsOfExperience && 
+    t.experience.yearsOfExperience >= 4 && 
+    t.experience.yearsOfExperience <= 12
+  );
+  
+  return midLevelTherapist || therapists[0] || null;
+}
+
+function findSeniorTherapist(unit: string, therapists: Person[], situation: string): Person | null {
+  const seniorTherapists = therapists.filter(t => 
+    t.experience?.yearsOfExperience && t.experience.yearsOfExperience >= 10
+  );
+  
+  return seniorTherapists[0] || therapists[0] || null;
+}
+
+// Pharmacist selection functions
+function findSpecialtyPharmacist(unit: string, pharmacists: Person[], situation: string): Person | null {
+  // For day shifts, prefer clinical pharmacists; for night shifts, prefer staff pharmacists
+  const clinicalPharmacist = pharmacists.find(p => p.title?.includes('Clinical'));
+  const staffPharmacist = pharmacists.find(p => p.title?.includes('Staff'));
+  
+  return clinicalPharmacist || staffPharmacist || pharmacists[0] || null;
+}
+
+function findBalancedPharmacist(unit: string, pharmacists: Person[], situation: string): Person | null {
+  return pharmacists[0] || null;
+}
+
+function findSeniorPharmacist(unit: string, pharmacists: Person[], situation: string): Person | null {
+  const seniorPharmacists = pharmacists.filter(p => 
+    p.experience?.yearsOfExperience && p.experience.yearsOfExperience >= 10
+  );
+  
+  return seniorPharmacists[0] || pharmacists[0] || null;
+}
+
+// IT Support selection functions
+function findSpecialtyIT(unit: string, itSupport: Person[], situation: string): Person | null {
+  // For emergencies, prefer systems administrators
+  if (situation.toLowerCase().includes('emergency')) {
+    const sysAdmin = itSupport.find(it => it.title?.includes('Administrator'));
+    if (sysAdmin) return sysAdmin;
+  }
+  
+  return itSupport[0] || null;
+}
+
+function findBalancedIT(unit: string, itSupport: Person[], situation: string): Person | null {
+  return itSupport[0] || null;
+}
+
+function findSeniorIT(unit: string, itSupport: Person[], situation: string): Person | null {
+  const seniorIT = itSupport.filter(it => 
+    it.experience?.yearsOfExperience && it.experience.yearsOfExperience >= 8
+  );
+  
+  return seniorIT[0] || itSupport[0] || null;
+}
+
+// Admin selection functions
+function findSpecialtyAdmin(unit: string, admin: Person[], situation: string): Person | null {
+  // For quality-related situations, prefer QA coordinators
+  if (situation.toLowerCase().includes('quality') || situation.toLowerCase().includes('compliance')) {
+    const qaAdmin = admin.find(a => a.department === 'Quality Assurance');
+    if (qaAdmin) return qaAdmin;
+  }
+  
+  // For patient-related situations, prefer patient services
+  if (situation.toLowerCase().includes('patient')) {
+    const patientAdmin = admin.find(a => a.department === 'Patient Services');
+    if (patientAdmin) return patientAdmin;
+  }
+  
+  return admin[0] || null;
+}
+
+function findBalancedAdmin(unit: string, admin: Person[], situation: string): Person | null {
+  return admin[0] || null;
+}
+
+function findSeniorAdmin(unit: string, admin: Person[], situation: string): Person | null {
+  const seniorAdmin = admin.filter(a => 
+    a.experience?.yearsOfExperience && a.experience.yearsOfExperience >= 10
+  );
+  
+  return seniorAdmin[0] || admin[0] || null;
+}
+
 // Calculate team composition
 function calculateTeamComposition(shifts: Shift[], availableStaff: Person[]): {
   totalStaff: number;
@@ -533,7 +823,7 @@ function calculateTeamComposition(shifts: Shift[], availableStaff: Person[]): {
     totalStaff: assignedStaff.length,
     doctors: assignedStaff.filter(p => p.role === 'Doctor').length,
     nurses: assignedStaff.filter(p => p.role === 'Nurse').length,
-    specialists: assignedStaff.filter(p => p.specialty).length,
+    specialists: assignedStaff.filter(p => p.specialty || p.role === 'Technician' || p.role === 'Therapist' || p.role === 'Pharmacist').length,
     seniorStaff: assignedStaff.filter(p => 
       p.seniority?.includes('Senior') || 
       p.seniority?.includes('Consultant') ||
@@ -573,18 +863,44 @@ function calculateMatchScore(shifts: Shift[], availableStaff: Person[], situatio
 function calculatePersonMatchScore(person: Person, unit: string, situation: string): number {
   let score = 50; // Base score
   
-  // Specialty match
+  // Specialty match - prioritize situation-specific specialties
   if (person.specialty) {
-    const unitSpecialtyMap: {[key: string]: string[]} = {
-      'ICU': ['Critical Care', 'Emergency Medicine'],
-      'Cardiology': ['Cardiology'],
-      'Emergency': ['Emergency Medicine'],
-      'Surgery': ['Surgery']
-    };
+    const situationAnalysis = analyzeSituation(situation);
+    const requiredSpecialties = situationAnalysis.specialties;
     
-    const preferredSpecialties = unitSpecialtyMap[unit] || [];
-    if (preferredSpecialties.includes(person.specialty)) {
-      score += 25;
+    // High score for direct specialty match from situation
+    if (requiredSpecialties.includes(person.specialty)) {
+      score += 35;
+    } else {
+      // Lower score for unit-based specialty match
+      const unitSpecialtyMap: {[key: string]: string[]} = {
+        'ICU': ['Critical Care', 'Emergency Medicine'],
+        'Cardiology': ['Cardiology'],
+        'Emergency': ['Emergency Medicine'],
+        'Surgery': ['General Surgery', 'Urology', 'Orthopedics', 'Neurosurgery', 'Plastic Surgery', 'ENT', 'Trauma Surgery'],
+        'Urology': ['Urology'],
+        'Orthopedics': ['Orthopedics'],
+        'Neurosurgery': ['Neurosurgery'],
+        'Oncology': ['Oncology'],
+        'Gastroenterology': ['Gastroenterology'],
+        'Pulmonology': ['Pulmonology'],
+        'Nephrology': ['Nephrology'],
+        'Obstetrics': ['Obstetrics'],
+        'Gynecology': ['Gynecology'],
+        'Pediatrics': ['Pediatrics'],
+        'Psychiatry': ['Psychiatry'],
+        'Dermatology': ['Dermatology'],
+        'Ophthalmology': ['Ophthalmology'],
+        'ENT': ['ENT'],
+        'Radiology': ['Radiology'],
+        'Pathology': ['Pathology'],
+        'Anesthesiology': ['Anesthesiology']
+      };
+      
+      const preferredSpecialties = unitSpecialtyMap[unit] || [];
+      if (preferredSpecialties.includes(person.specialty)) {
+        score += 20;
+      }
     }
   }
   

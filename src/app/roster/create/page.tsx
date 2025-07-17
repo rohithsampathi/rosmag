@@ -314,6 +314,35 @@ export default function CreateRosterPage() {
                     ✓ Selected - View shifts below
                   </div>
                 )}
+                
+                {/* Team Profiles */}
+                {option.teamProfiles && option.teamProfiles.length > 0 && (
+                  <div className="mt-3 border-t pt-3">
+                    <h5 className="text-xs font-medium text-gray-700 mb-2">Team Members:</h5>
+                    <div className="space-y-2">
+                      {option.teamProfiles.map((profile) => (
+                        <div key={profile.personId} className="bg-white border rounded p-2 text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-gray-900">{profile.name}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              profile.matchScore >= 80 ? 'bg-green-100 text-green-800' :
+                              profile.matchScore >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {profile.matchScore}%
+                            </span>
+                          </div>
+                          <div className="text-gray-600 mb-1">{profile.role}{profile.specialty ? ` - ${profile.specialty}` : ''}</div>
+                          <div className="text-gray-500 text-xs">{profile.usp}</div>
+                          {profile.experience?.yearsOfExperience && (
+                            <div className="text-gray-500 text-xs mt-1">
+                              {profile.experience.yearsOfExperience} years experience
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

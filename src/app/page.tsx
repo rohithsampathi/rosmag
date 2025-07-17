@@ -11,7 +11,6 @@ export default function HomePage() {
   const [rosters, setRosters] = useState<Roster[]>([]);
   const [staffCount, setStaffCount] = useState(0);
   const [hospitalCount, setHospitalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -35,8 +34,6 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -55,13 +52,6 @@ export default function HomePage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
@@ -72,13 +62,6 @@ export default function HomePage() {
         <p className="text-lg text-gray-600 mb-8">
           AI-powered hospital staff scheduling and optimization
         </p>
-        
-        <button 
-          onClick={initializeData}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Initialize Sample Data
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -119,7 +102,7 @@ export default function HomePage() {
           {rosters.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No rosters found. Initialize sample data to get started.</p>
+              <p>No rosters found. Create a new roster to get started.</p>
             </div>
           ) : (
             <div className="space-y-4">
