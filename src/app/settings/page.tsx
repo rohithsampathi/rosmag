@@ -3,6 +3,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Settings, Save, RefreshCw } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 interface AppSettings {
   maxHours7d: number;
@@ -65,15 +66,18 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="mb-4">
+        <BackButton href="/" />
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Configure application settings and roster rules</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-600">Configure application settings and roster rules</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto"
         >
           {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           <span>Save Settings</span>
@@ -86,10 +90,10 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Roster Rules */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center">
             <Settings className="w-5 h-5 mr-2" />
             Roster Rules
           </h2>
@@ -135,8 +139,8 @@ export default function SettingsPage() {
         </div>
 
         {/* Hospital Settings */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Hospital Configuration</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">Hospital Configuration</h2>
           
           <div className="space-y-4">
             <div>
@@ -170,8 +174,8 @@ export default function SettingsPage() {
         </div>
 
         {/* API Configuration */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">API Configuration</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:col-span-2">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">API Configuration</h2>
           
           <div className="space-y-4">
             <div>

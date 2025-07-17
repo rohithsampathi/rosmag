@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Person } from '@/lib/types';
 import { Plus, Edit, Trash2, Save, X, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 export default function StaffPage() {
   const [staff, setStaff] = useState<Person[]>([]);
@@ -155,14 +156,17 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="mb-4">
+        <BackButton href="/" />
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Staff Management</h1>
-          <p className="text-gray-600">Manage hospital staff members and their details</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Staff Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage hospital staff members and their details</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full sm:w-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add Staff</span>
@@ -171,11 +175,11 @@ export default function StaffPage() {
 
       {/* Add/Edit Form */}
       {(showAddForm || editingId) && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-4">
             {editingId ? 'Edit Staff Member' : 'Add New Staff Member'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Person ID
@@ -250,17 +254,17 @@ export default function StaffPage() {
               />
             </div>
           </div>
-          <div className="flex items-center space-x-4 mt-6">
+          <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
             <button
               onClick={handleSave}
-              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              className="flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto"
             >
               <Save className="w-4 h-4" />
               <span>Save</span>
             </button>
             <button
               onClick={cancelEdit}
-              className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              className="flex items-center justify-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 w-full sm:w-auto"
             >
               <X className="w-4 h-4" />
               <span>Cancel</span>
@@ -271,38 +275,38 @@ export default function StaffPage() {
 
       {/* Staff List */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold flex items-center">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold flex items-center">
             <Users className="w-5 h-5 mr-2" />
             Staff Members ({staff.length})
           </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <table className="w-full min-w-[800px]">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Specialty/Unit
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Skills
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Seniority
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Availability
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Attendance
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -310,17 +314,17 @@ export default function StaffPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {staff.map((person) => (
                 <tr key={person.personId} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{person.name}</div>
-                    <div className="text-sm text-gray-500">{person.personId}</div>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium text-gray-900 text-sm">{person.name}</div>
+                    <div className="text-xs text-gray-500">{person.personId}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {person.role}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {person.specialty || person.unit || '-'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-3 sm:px-6 py-4 text-sm text-gray-900">
                     <div className="flex flex-wrap gap-1">
                       {person.skills.slice(0, 2).map((skill, idx) => (
                         <span key={idx} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
@@ -332,15 +336,15 @@ export default function StaffPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {person.seniority || person.grade || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getAvailabilityColor(getAvailabilityStatus(person))}`}>
                       {getAvailabilityStatus(person)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
                       <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
                         getAttendanceStatus(person) === 'present' 
@@ -372,17 +376,17 @@ export default function StaffPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center space-x-2">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => startEdit(person)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 p-1"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(person.personId)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 p-1"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

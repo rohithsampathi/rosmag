@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Roster, Person, Shift, Assignment, TeamOption, RosterGenerationResult } from '@/lib/types';
 import { Calendar, Plus, Save, Brain, Users } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 export default function CreateRosterPage() {
   const router = useRouter();
@@ -192,16 +193,19 @@ export default function CreateRosterPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="mb-4">
+        <BackButton href="/" />
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Create New Roster</h1>
-          <p className="text-gray-600">Plan and create a new hospital roster</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Roster</h1>
+          <p className="text-sm sm:text-base text-gray-600">Plan and create a new hospital roster</p>
         </div>
         <div className="flex items-center space-x-4">
           <button
             onClick={saveRoster}
             disabled={saving || !roster.shifts?.length}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto"
           >
             <Save className="w-4 h-4" />
             <span>Save Roster</span>
@@ -210,8 +214,8 @@ export default function CreateRosterPage() {
       </div>
 
       {/* AI Situation Input */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center">
           <Brain className="w-5 h-5 mr-2" />
           AI-Powered Roster Generation
         </h3>
@@ -230,7 +234,7 @@ export default function CreateRosterPage() {
           <button
             onClick={generateRoster}
             disabled={generating || !situation.trim()}
-            className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            className="flex items-center justify-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 w-full sm:w-auto"
           >
             {generating ? (
               <>
@@ -249,9 +253,9 @@ export default function CreateRosterPage() {
 
       {/* Team Options Display */}
       {teamOptions.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">Generated Team Options</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-4">Generated Team Options</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {teamOptions.map((option) => (
               <div
                 key={option.optionId}
@@ -350,9 +354,9 @@ export default function CreateRosterPage() {
       )}
 
       {/* Roster Metadata */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Roster Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-4">Roster Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Hospital ID</label>
             <input
@@ -384,12 +388,12 @@ export default function CreateRosterPage() {
       </div>
 
       {/* Available Staff */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center">
           <Users className="w-5 h-5 mr-2" />
           Available Staff ({staff.length})
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {staff.map((person) => (
             <div
               key={person.personId}
@@ -406,12 +410,12 @@ export default function CreateRosterPage() {
       </div>
 
       {/* Shifts */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Shifts</h3>
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 space-y-3 sm:space-y-0">
+          <h3 className="text-base sm:text-lg font-semibold">Shifts</h3>
           <button
             onClick={addShift}
-            className="flex items-center space-x-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700"
+            className="flex items-center justify-center space-x-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Add Shift</span>
@@ -420,8 +424,8 @@ export default function CreateRosterPage() {
 
         <div className="space-y-4">
           {roster.shifts?.map((shift, shiftIndex) => (
-            <div key={shiftIndex} className="border border-gray-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div key={shiftIndex} className="border border-gray-200 rounded-lg p-3 sm:p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Shift ID</label>
                   <input

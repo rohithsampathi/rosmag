@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { RosterGrid } from '@/components/RosterGrid';
 import { Roster, Person, AIAnalysis } from '@/lib/types';
 import { Loader, RefreshCw, Save, Brain } from 'lucide-react';
+import { BackButton } from '@/components/BackButton';
 
 export default function RosterPage() {
   const params = useParams();
@@ -126,21 +127,24 @@ export default function RosterPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="mb-4">
+        <BackButton href="/" />
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Roster Management
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {Array.isArray(hospitalId) ? hospitalId[0].toUpperCase() : hospitalId.toUpperCase()} • {Array.isArray(date) ? date[0] : date} • Version {roster.version}
           </p>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <button
             onClick={() => analyzeRoster()}
             disabled={analyzing}
-            className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            className="flex items-center justify-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 w-full sm:w-auto"
           >
             {analyzing ? (
               <Loader className="w-4 h-4 animate-spin" />
@@ -152,7 +156,7 @@ export default function RosterPage() {
 
           <button
             onClick={fetchData}
-            className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+            className="flex items-center justify-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 w-full sm:w-auto"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Refresh</span>
