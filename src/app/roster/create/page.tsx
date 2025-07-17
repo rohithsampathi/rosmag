@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Roster, Person, Shift, Assignment } from '@/lib/types';
+import { Roster, Person, Shift, Assignment, TeamOption, RosterGenerationResult } from '@/lib/types';
 import { Calendar, Plus, Save, Brain, Users } from 'lucide-react';
 
 export default function CreateRosterPage() {
@@ -12,6 +12,8 @@ export default function CreateRosterPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [situation, setSituation] = useState('');
+  const [teamOptions, setTeamOptions] = useState<TeamOption[]>([]);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [roster, setRoster] = useState<Partial<Roster>>({
     hospitalId: 'hosp-01',
     date: new Date().toISOString().split('T')[0],
@@ -126,11 +128,9 @@ export default function CreateRosterPage() {
       });
 
       if (response.ok) {
-        const generatedRoster = await response.json();
-        setRoster({
-          ...roster,
-          shifts: generatedRoster.shifts
-        });
+        const rosterResult: RosterGenerationResult = await response.json();
+        setTeamOptions(rosterResult.options);
+        setSelectedOption(null);
       } else {
         throw new Error('Failed to generate roster');
       }
@@ -139,6 +139,17 @@ export default function CreateRosterPage() {
       alert('Failed to generate roster. Please try again.');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const selectTeamOption = (optionId: string) => {
+    const option = teamOptions.find(opt => opt.optionId === optionId);
+    if (option) {
+      setSelectedOption(optionId);
+      setRoster({
+        ...roster,
+        shifts: option.shifts
+      });
     }
   };
 
@@ -235,6 +246,79 @@ export default function CreateRosterPage() {
           </button>
         </div>
       </div>
+
+      {/* Team Options Display */}
+      {teamOptions.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold mb-4">Generated Team Options</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {teamOptions.map((option) => (
+              <div
+                key={option.optionId}
+                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  selectedOption === option.optionId
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => selectTeamOption(option.optionId)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold text-gray-900">{option.title}</h4>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm font-medium text-gray-600">Match:</span>
+                    <span className={`text-sm font-bold ${
+                      option.matchScore >= 80 ? 'text-green-600' :
+                      option.matchScore >= 60 ? 'text-yellow-600' : 'text-red-600'
+                    }`}>
+                      {option.matchScore}%
+                    </span>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-gray-600 mb-3">{option.explanation}</p>
+                
+                {/* Team Composition */}
+                <div className="bg-gray-50 rounded p-2 mb-3">
+                  <h5 className="text-xs font-medium text-gray-700 mb-1">Team Composition:</h5>
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    <div>Total Staff: {option.teamComposition.totalStaff}</div>
+                    <div>Doctors: {option.teamComposition.doctors}</div>
+                    <div>Nurses: {option.teamComposition.nurses}</div>
+                    <div>Specialists: {option.teamComposition.specialists}</div>
+                    <div>Senior Staff: {option.teamComposition.seniorStaff}</div>
+                  </div>
+                </div>
+                
+                {/* Strengths */}
+                <div className="mb-2">
+                  <h5 className="text-xs font-medium text-green-700 mb-1">Strengths:</h5>
+                  <ul className="text-xs text-green-600 space-y-0.5">
+                    {option.strengths.map((strength, index) => (
+                      <li key={index}>• {strength}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                {/* Weaknesses */}
+                <div>
+                  <h5 className="text-xs font-medium text-red-700 mb-1">Considerations:</h5>
+                  <ul className="text-xs text-red-600 space-y-0.5">
+                    {option.weaknesses.map((weakness, index) => (
+                      <li key={index}>• {weakness}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                {selectedOption === option.optionId && (
+                  <div className="mt-3 text-xs text-blue-600 font-medium">
+                    ✓ Selected - View shifts below
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Roster Metadata */}
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -383,10 +467,31 @@ export default function CreateRosterPage() {
                   return (
                     <div key={assignmentIndex} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                       <div>
-                        <span className="font-medium">{person?.name || assignment.personId}</span>
-                        <span className="text-sm text-gray-600 ml-2">({assignment.role})</span>
-                        {assignment.tags.senior && (
-                          <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded ml-2">Senior</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{person?.name || assignment.personId}</span>
+                          <span className="text-sm text-gray-600">({assignment.role})</span>
+                          {assignment.tags.senior && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">Senior</span>
+                          )}
+                          {assignment.tags.specialty && (
+                            <span className="text-xs bg-green-100 text-green-800 px-1 py-0.5 rounded">
+                              {assignment.tags.specialty}
+                            </span>
+                          )}
+                          {assignment.tags.matchScore && (
+                            <span className={`text-xs px-1 py-0.5 rounded ${
+                              assignment.tags.matchScore >= 80 ? 'bg-green-100 text-green-800' :
+                              assignment.tags.matchScore >= 60 ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {assignment.tags.matchScore}% match
+                            </span>
+                          )}
+                        </div>
+                        {assignment.tags.experience && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {assignment.tags.experience} years experience
+                          </div>
                         )}
                       </div>
                       <button

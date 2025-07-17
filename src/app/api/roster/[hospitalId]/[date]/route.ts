@@ -1,8 +1,64 @@
 // src/app/api/roster/[hospitalId]/[date]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getRostersCollection, getEventsCollection } from '@/lib/mongodb';
-import { Roster, RosterEvent } from '@/lib/types';
+import { getRostersCollection, getEventsCollection, getStaffCollection } from '@/lib/mongodb';
+import { Roster, RosterEvent, Person } from '@/lib/types';
+
+async function updateStaffAvailability(roster: Roster, previousRoster?: Roster) {
+  const staffCollection = await getStaffCollection();
+  const rosterId = `${roster.hospitalId}:${roster.date}`;
+  
+  // Get all assigned staff IDs from the new roster
+  const assignedStaffIds = new Set<string>();
+  roster.shifts.forEach(shift => {
+    shift.assignments.forEach(assignment => {
+      assignedStaffIds.add(assignment.personId);
+    });
+  });
+  
+  // Get previously assigned staff IDs if there was a previous roster
+  const previouslyAssignedStaffIds = new Set<string>();
+  if (previousRoster) {
+    previousRoster.shifts.forEach(shift => {
+      shift.assignments.forEach(assignment => {
+        previouslyAssignedStaffIds.add(assignment.personId);
+      });
+    });
+  }
+  
+  // Update availability for newly assigned staff
+  if (assignedStaffIds.size > 0) {
+    await staffCollection.updateMany(
+      { personId: { $in: Array.from(assignedStaffIds) } },
+      {
+        $set: {
+          'availability.status': 'assigned',
+          'availability.lastAssigned': rosterId,
+          'availability.lastAssignedDate': roster.date,
+          'availability.reason': 'Assigned to roster'
+        }
+      }
+    );
+  }
+  
+  // Update availability for staff who were previously assigned but are no longer assigned
+  const unassignedStaffIds = Array.from(previouslyAssignedStaffIds).filter(id => !assignedStaffIds.has(id));
+  if (unassignedStaffIds.length > 0) {
+    await staffCollection.updateMany(
+      { personId: { $in: unassignedStaffIds } },
+      {
+        $set: {
+          'availability.status': 'available',
+          'availability.reason': 'Unassigned from roster'
+        },
+        $unset: {
+          'availability.lastAssigned': '',
+          'availability.lastAssignedDate': ''
+        }
+      }
+    );
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -82,6 +138,9 @@ export async function PUT(
     };
 
     await eventsCollection.insertOne(event);
+
+    // Update staff availability based on roster assignments
+    await updateStaffAvailability(updatedRoster, currentRoster || undefined);
 
     return NextResponse.json(updatedRoster);
   } catch (error) {

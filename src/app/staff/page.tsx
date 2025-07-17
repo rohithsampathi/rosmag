@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Person } from '@/lib/types';
-import { Plus, Edit, Trash2, Save, X, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 export default function StaffPage() {
   const [staff, setStaff] = useState<Person[]>([]);
@@ -102,6 +102,47 @@ export default function StaffPage() {
       seniority: '',
       grade: ''
     });
+  };
+
+  const updateAttendance = async (personId: string, status: 'present' | 'absent') => {
+    try {
+      const response = await fetch(`/api/staff/${personId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attendance: {
+            status,
+            lastUpdated: new Date().toISOString(),
+            updatedBy: 'system' // In real app, get from auth
+          }
+        })
+      });
+
+      if (response.ok) {
+        await fetchStaff();
+      }
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+    }
+  };
+
+  const getAvailabilityStatus = (person: Person) => {
+    if (!person.availability) return 'available';
+    return person.availability.status || 'available';
+  };
+
+  const getAvailabilityColor = (status: string) => {
+    switch (status) {
+      case 'available': return 'bg-green-100 text-green-800';
+      case 'assigned': return 'bg-blue-100 text-blue-800';
+      case 'unavailable': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getAttendanceStatus = (person: Person) => {
+    if (!person.attendance) return 'unknown';
+    return person.attendance.status || 'unknown';
   };
 
   if (loading) {
@@ -256,6 +297,12 @@ export default function StaffPage() {
                   Seniority
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Availability
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Attendance
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -287,6 +334,43 @@ export default function StaffPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {person.seniority || person.grade || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getAvailabilityColor(getAvailabilityStatus(person))}`}>
+                      {getAvailabilityStatus(person)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
+                        getAttendanceStatus(person) === 'present' 
+                          ? 'bg-green-100 text-green-800' 
+                          : getAttendanceStatus(person) === 'absent'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {getAttendanceStatus(person) === 'present' && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {getAttendanceStatus(person) === 'absent' && <XCircle className="w-3 h-3 mr-1" />}
+                        {getAttendanceStatus(person) === 'unknown' && <Clock className="w-3 h-3 mr-1" />}
+                        {getAttendanceStatus(person)}
+                      </span>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => updateAttendance(person.personId, 'present')}
+                          className="text-green-600 hover:text-green-900 text-xs"
+                          title="Mark Present"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => updateAttendance(person.personId, 'absent')}
+                          className="text-red-600 hover:text-red-900 text-xs"
+                          title="Mark Absent"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center space-x-2">

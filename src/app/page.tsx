@@ -5,18 +5,42 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, Building2, Users, AlertTriangle } from 'lucide-react';
+import { Roster, Person } from '@/lib/types';
 
 export default function HomePage() {
-  const [rosters, setRosters] = useState<any[]>([]);
+  const [rosters, setRosters] = useState<Roster[]>([]);
+  const [staffCount, setStaffCount] = useState(0);
+  const [hospitalCount, setHospitalCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, fetch current rosters
-    setRosters([
-      { hospitalId: 'hosp-01', date: '2025-07-17', version: 1, status: 'active' },
-      { hospitalId: 'hosp-01', date: '2025-07-18', version: 1, status: 'draft' },
-    ]);
-    setLoading(false);
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch staff count
+        const staffResponse = await fetch('/api/staff');
+        if (staffResponse.ok) {
+          const staff: Person[] = await staffResponse.json();
+          setStaffCount(staff.length);
+          
+          // Count unique hospitals from staff departments
+          const uniqueHospitals = new Set(staff.map(s => s.department).filter(Boolean));
+          setHospitalCount(uniqueHospitals.size || 1);
+        }
+
+        // Fetch all rosters
+        const rostersResponse = await fetch('/api/rosters');
+        if (rostersResponse.ok) {
+          const rosters: Roster[] = await rostersResponse.json();
+          setRosters(rosters);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const initializeData = async () => {
@@ -63,7 +87,7 @@ export default function HomePage() {
             <Building2 className="w-8 h-8 text-blue-600" />
             <h2 className="text-xl font-semibold">Hospitals</h2>
           </div>
-          <p className="text-3xl font-bold text-gray-900">1</p>
+          <p className="text-3xl font-bold text-gray-900">{hospitalCount}</p>
           <p className="text-gray-600">Active facilities</p>
         </div>
 
@@ -81,7 +105,7 @@ export default function HomePage() {
             <Users className="w-8 h-8 text-purple-600" />
             <h2 className="text-xl font-semibold">Staff Members</h2>
           </div>
-          <p className="text-3xl font-bold text-gray-900">6</p>
+          <p className="text-3xl font-bold text-gray-900">{staffCount}</p>
           <p className="text-gray-600">Total personnel</p>
         </div>
       </div>
@@ -115,12 +139,8 @@ export default function HomePage() {
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        roster.status === 'active' 
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {roster.status}
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        active
                       </span>
                     </div>
                   </div>

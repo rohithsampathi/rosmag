@@ -11,6 +11,7 @@ export interface Person {
     discipline?: string;
     title?: string;
     skills: string[];
+    usp?: string;
     preferences: {
       prefersWith?: string[];
       maxHoursPerWeek?: number;
@@ -25,6 +26,17 @@ export interface Person {
       yearsOfExperience?: number;
       totalSurgeries?: number;
       specializations?: string[];
+    };
+    availability?: {
+      status: "available" | "unavailable" | "assigned";
+      reason?: string;
+      lastAssigned?: string; // roster ID
+      lastAssignedDate?: string;
+    };
+    attendance?: {
+      status: "present" | "absent";
+      lastUpdated?: string;
+      updatedBy?: string;
     };
   }
   
@@ -77,4 +89,48 @@ export interface Person {
       warning?: string;
     }>;
     score?: number;
+  }
+
+  export interface TeamMemberProfile {
+    personId: string;
+    name: string;
+    role: string;
+    specialty?: string;
+    usp: string;
+    experience?: {
+      yearsOfExperience?: number;
+      totalSurgeries?: number;
+      specializations?: string[];
+    };
+    seniority?: string;
+    grade?: string;
+    matchScore: number;
+  }
+
+  export interface TeamOption {
+    optionId: string;
+    title: string;
+    matchScore: number;
+    explanation: string;
+    strengths: string[];
+    weaknesses: string[];
+    shifts: Shift[];
+    teamComposition: {
+      totalStaff: number;
+      doctors: number;
+      nurses: number;
+      specialists: number;
+      seniorStaff: number;
+    };
+    teamProfiles: TeamMemberProfile[];
+  }
+
+  export interface RosterGenerationResult {
+    options: TeamOption[];
+    analysis: {
+      situation: string;
+      requiredCoverage: any;
+      availableStaff: number;
+      constraints: any;
+    };
   }

@@ -9,22 +9,48 @@ export async function PUT(
 ) {
   try {
     const { personId } = params;
-    const updatedStaff: Person = await request.json();
+    const updateData = await request.json();
     
     const collection = await getStaffCollection();
-    const result = await collection.replaceOne(
-      { personId },
-      updatedStaff
-    );
-
-    if (result.matchedCount === 0) {
-      return NextResponse.json(
-        { error: 'Staff member not found' },
-        { status: 404 }
+    
+    // Check if this is a partial update (e.g., just attendance)
+    const isPartialUpdate = Object.keys(updateData).some(key => 
+      key === 'attendance' || key === 'availability'
+    ) && Object.keys(updateData).length <= 2;
+    
+    if (isPartialUpdate) {
+      // Use $set for partial updates
+      const result = await collection.updateOne(
+        { personId },
+        { $set: updateData }
       );
-    }
+      
+      if (result.matchedCount === 0) {
+        return NextResponse.json(
+          { error: 'Staff member not found' },
+          { status: 404 }
+        );
+      }
+      
+      // Return the updated staff member
+      const updatedStaff = await collection.findOne({ personId });
+      return NextResponse.json(updatedStaff);
+    } else {
+      // Full replacement for complete updates
+      const result = await collection.replaceOne(
+        { personId },
+        updateData
+      );
 
-    return NextResponse.json(updatedStaff);
+      if (result.matchedCount === 0) {
+        return NextResponse.json(
+          { error: 'Staff member not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(updateData);
+    }
   } catch (error) {
     console.error('Error updating staff:', error);
     return NextResponse.json(
